@@ -8,7 +8,7 @@
 //
 //  https://github.com/danielgindi/Charts
 //
-// zyb
+
 #import "AppDelegate.h"
 #import "DemoListViewController.h"
 
