@@ -18,8 +18,11 @@ open class LineChartView: BarLineChartViewBase, LineChartDataProvider
     internal override func initialize()
     {
         super.initialize()
-        
-        renderer = LineChartRenderer(dataProvider: self, animator: _animator, viewPortHandler: _viewPortHandler)
+        // 朱元斌2018-06-01 注释
+//        renderer = LineChartRenderer(dataProvider: self, animator: _animator, viewPortHandler: _viewPortHandler)
+        // 朱元斌2018-06-01 添加
+                renderer = BMFLineChartRenderer(dataProvider: self, animator: _animator, viewPortHandler: _viewPortHandler)
+
     }
     
     // MARK: - LineChartDataProvider
