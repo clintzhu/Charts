@@ -33,6 +33,12 @@ public protocol ChartViewDelegate
     
     // Callbacks when the chart is moved / translated via drag gesture.
     @objc optional func chartTranslated(_ chartView: ChartViewBase, dX: CGFloat, dY: CGFloat)
+    
+    // 朱元斌 2017-08-18 添加 手势在结束或取消时调用
+    @objc optional func chartViewPanGustureEndOrCancelled(_ chartView: ChartViewBase)
+    
+    // 朱元斌 2017-08-18 添加  解决 长按展示高亮条
+    @objc optional func charViewLongPressGestureEndOrCancelled(_ charView:ChartViewBase)
 }
 
 open class ChartViewBase: NSUIView, ChartDataProvider, AnimatorDelegate
@@ -134,7 +140,7 @@ open class ChartViewBase: NSUIView, ChartDataProvider, AnimatorDelegate
     
     /// An extra offset to be appended to the viewport's left
     @objc open var extraLeftOffset: CGFloat = 0.0
-    
+     fileprivate var _highlightPerLongPressEnabled = true
     @objc open func setExtraOffsets(left: CGFloat, top: CGFloat, right: CGFloat, bottom: CGFloat)
     {
         extraLeftOffset = left
@@ -388,6 +394,17 @@ open class ChartViewBase: NSUIView, ChartDataProvider, AnimatorDelegate
     @objc open var isHighLightPerTapEnabled: Bool
     {
         return highlightPerTapEnabled
+    }
+    
+    open var highlightPerLongPressEnabled:Bool{
+        
+        get { return _highlightPerLongPressEnabled}
+        set {_highlightPerLongPressEnabled = newValue}
+    }
+    
+    open var isHightlightPerLongPressEnabled:Bool{
+        
+        return highlightPerLongPressEnabled
     }
     
     /// Checks if the highlight array is null, has a length of zero or if the first object is null.
