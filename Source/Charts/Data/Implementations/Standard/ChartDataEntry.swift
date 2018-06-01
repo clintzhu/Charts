@@ -15,7 +15,7 @@ open class ChartDataEntry: ChartDataEntryBase
 {
     /// the x value
     @objc open var x = Double(0.0)
-    
+
     public required init()
     {
         super.init()
