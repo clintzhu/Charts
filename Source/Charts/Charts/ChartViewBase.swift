@@ -508,11 +508,16 @@ open class ChartViewBase: NSUIView, ChartDataProvider, AnimatorDelegate
     {
         var entry: ChartDataEntry?
         var h = highlight
-        
+        if let b = h{
+            let inValidValue = 0.000001
+            if(b.y <= inValidValue){
+                h = nil
+            }
+        }
         if h == nil
         {
-            self.lastHighlighted = nil
-            _indicesToHighlight.removeAll(keepingCapacity: false)
+//            self.lastHighlighted = nil
+//            _indicesToHighlight.removeAll(keepingCapacity: false)
         }
         else
         {

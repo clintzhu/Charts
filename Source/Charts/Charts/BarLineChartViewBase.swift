@@ -675,13 +675,13 @@ open class BarLineChartViewBase: ChartViewBase, BarLineScatterCandleBubbleChartD
     
     
     
-    @objc private func panGestureRecognized(_ recognizer: NSUIPanGestureRecognizer)
+    @objc fileprivate func panGestureRecognized(_ recognizer: NSUIPanGestureRecognizer)
     {
         if recognizer.state == NSUIGestureRecognizerState.began && recognizer.nsuiNumberOfTouches() > 0
         {
             stopDeceleration()
             
-            if _data === nil || !self.isDragEnabled
+            if _data === nil
             { // If we have no data, we have nothing to pan and no data to highlight
                 return
             }
@@ -689,23 +689,15 @@ open class BarLineChartViewBase: ChartViewBase, BarLineScatterCandleBubbleChartD
             // If drag is enabled and we are in a position where there's something to drag:
             //  * If we're zoomed in, then obviously we have something to drag.
             //  * If we have a drag offset - we always have something to drag
-            if !self.hasNoDragOffset || !self.isFullyZoomedOut
+            if self.isDragEnabled &&
+                (!self.hasNoDragOffset || !self.isFullyZoomedOut)
             {
                 _isDragging = true
                 
                 _closestDataSetToTouch = getDataSetByTouchPoint(point: recognizer.nsuiLocationOfTouch(0, inView: self))
                 
-                var translation = recognizer.translation(in: self)
-                if !self.dragXEnabled
-                {
-                    translation.x = 0.0
-                }
-                else if !self.dragYEnabled
-                {
-                    translation.y = 0.0
-                }
-                
-                let didUserDrag = translation.x != 0.0 || translation.y != 0.0
+                let translation = recognizer.translation(in: self)
+                let didUserDrag = (self is HorizontalBarChartView) ? translation.y != 0.0 : translation.x != 0.0
                 
                 // Check to see if user dragged at all and if so, can the chart be dragged by the given amount
                 if didUserDrag && !performPanChange(translation: translation)
@@ -740,16 +732,7 @@ open class BarLineChartViewBase: ChartViewBase, BarLineScatterCandleBubbleChartD
             if _isDragging
             {
                 let originalTranslation = recognizer.translation(in: self)
-                var translation = CGPoint(x: originalTranslation.x - _lastPanPoint.x, y: originalTranslation.y - _lastPanPoint.y)
-                
-                if !self.dragXEnabled
-                {
-                    translation.x = 0.0
-                }
-                else if !self.dragYEnabled
-                {
-                    translation.y = 0.0
-                }
+                let translation = CGPoint(x: originalTranslation.x - _lastPanPoint.x, y: originalTranslation.y - _lastPanPoint.y)
                 
                 let _ = performPanChange(translation: translation)
                 
@@ -761,7 +744,9 @@ open class BarLineChartViewBase: ChartViewBase, BarLineScatterCandleBubbleChartD
                 
                 let lastHighlighted = self.lastHighlighted
                 
-                if h != lastHighlighted
+                if ((h === nil && lastHighlighted !== nil) ||
+                    (h !== nil && lastHighlighted === nil) ||
+                    (h !== nil && lastHighlighted !== nil && !h!.isEqual(lastHighlighted)))
                 {
                     self.lastHighlighted = h
                     self.highlightValue(h, callDelegate: true)
@@ -770,11 +755,9 @@ open class BarLineChartViewBase: ChartViewBase, BarLineScatterCandleBubbleChartD
         }
         else if recognizer.state == NSUIGestureRecognizerState.ended || recognizer.state == NSUIGestureRecognizerState.cancelled
         {
-            // 朱元斌2018-06-01 添加
-            if(nil != delegate){
+            if (delegate != nil) {
                 delegate!.chartViewPanGustureEndOrCancelled?(self)
             }
-            
             if _isDragging
             {
                 if recognizer.state == NSUIGestureRecognizerState.ended && isDragDecelerationEnabled
@@ -977,6 +960,11 @@ open class BarLineChartViewBase: ChartViewBase, BarLineScatterCandleBubbleChartD
             {
                 return true
             }
+        // 朱元斌2017-08-17 添加用于响应多手势
+        if((gestureRecognizer.isKind(of: UIPanGestureRecognizer.self) && otherGestureRecognizer.isKind(of: UILongPressGestureRecognizer.self))){
+            
+            return true
+        }
         #endif
         
         if gestureRecognizer is NSUIPanGestureRecognizer,

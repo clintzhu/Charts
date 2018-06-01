@@ -640,7 +640,7 @@ open class BMFLineChartRenderer: LineRadarRenderer{
         drawCircles(context: context)
     }
     
-    private func drawCircles(context: CGContext)
+    fileprivate func drawCircles(context: CGContext)
     {
         guard
             let dataProvider = dataProvider,
@@ -651,40 +651,76 @@ open class BMFLineChartRenderer: LineRadarRenderer{
         
         let dataSets = lineData.dataSets
         
+        
+        
         var pt = CGPoint()
         var rect = CGRect()
         
         context.saveGState()
+        let invaildiateValue = 0.000001
         
         for i in 0 ..< dataSets.count
         {
             guard let dataSet = lineData.getDataSetByIndex(i) as? ILineChartDataSet else { continue }
             
-            if !dataSet.isVisible || !dataSet.isDrawCirclesEnabled || dataSet.entryCount == 0
+            var values = [ChartDataEntry]()
+            
+            for index in 0...dataSet.entryCount-1{
+                
+                let e1: ChartDataEntry = dataSet.entryForIndex(index)!
+                if e1.y == invaildiateValue{
+                    continue
+                }
+                else{
+                    values.append(e1)
+                    
+                }
+            }
+            
+            
+            let dataSet1: LineChartDataSet = LineChartDataSet.init(values: values, label: nil)
+            dataSet1.drawVerticalHighlightIndicatorEnabled = dataSet.drawVerticalHighlightIndicatorEnabled
+            dataSet1.lineWidth = dataSet.lineWidth
+            dataSet1.mode = dataSet.mode
+            dataSet1.circleRadius = dataSet.circleRadius
+            dataSet1.fillAlpha = dataSet.fillAlpha
+            dataSet1.fill = dataSet.fill
+            dataSet1.drawFilledEnabled  = dataSet.drawFilledEnabled
+            dataSet1.drawValuesEnabled = dataSet.drawValuesEnabled
+            dataSet1.drawCirclesEnabled = dataSet.drawCirclesEnabled
+            dataSet1.circleColors = dataSet.circleColors
+            dataSet1.colors = dataSet.colors
+            dataSet1.fillColor = dataSet.fillColor
+            
+            
+            
+            
+            
+            if !dataSet1.isVisible || !dataSet1.isDrawCirclesEnabled || dataSet1.entryCount == 0
             {
                 continue
             }
             
-            let trans = dataProvider.getTransformer(forAxis: dataSet.axisDependency)
+            let trans = dataProvider.getTransformer(forAxis: dataSet1.axisDependency)
             let valueToPixelMatrix = trans.valueToPixelMatrix
             
-            _xBounds.set(chart: dataProvider, dataSet: dataSet, animator: animator)
+            _xBounds.set(chart: dataProvider, dataSet: dataSet1, animator: animator)
             
-            let circleRadius = dataSet.circleRadius
+            let circleRadius = dataSet1.circleRadius
             let circleDiameter = circleRadius * 2.0
-            let circleHoleRadius = dataSet.circleHoleRadius
+            let circleHoleRadius = dataSet1.circleHoleRadius
             let circleHoleDiameter = circleHoleRadius * 2.0
             
-            let drawCircleHole = dataSet.isDrawCircleHoleEnabled &&
+            let drawCircleHole = dataSet1.isDrawCircleHoleEnabled &&
                 circleHoleRadius < circleRadius &&
                 circleHoleRadius > 0.0
             let drawTransparentCircleHole = drawCircleHole &&
-                (dataSet.circleHoleColor == nil ||
-                    dataSet.circleHoleColor == NSUIColor.clear)
+                (dataSet1.circleHoleColor == nil ||
+                    dataSet1.circleHoleColor == NSUIColor.clear)
             
             for j in stride(from: _xBounds.min, through: _xBounds.range + _xBounds.min, by: 1)
             {
-                guard let e = dataSet.entryForIndex(j) else { break }
+                guard let e = dataSet1.entryForIndex(j) else { break }
                 
                 pt.x = CGFloat(e.x)
                 pt.y = CGFloat(e.y * phaseY)
@@ -701,7 +737,7 @@ open class BMFLineChartRenderer: LineRadarRenderer{
                     continue
                 }
                 
-                context.setFillColor(dataSet.getCircleColor(atIndex: j)!.cgColor)
+                context.setFillColor(dataSet1.getCircleColor(atIndex: j)!.cgColor)
                 
                 rect.origin.x = pt.x - circleRadius
                 rect.origin.y = pt.y - circleRadius
@@ -815,44 +851,43 @@ extension BMFLineChartRenderer{
 
         
         
-        
         guard let dataProvider = dataProvider else { return }
         let trans = dataProvider.getTransformer(forAxis: dataSet.axisDependency)
-        
+
         let phaseY = animator.phaseY
-        
-        
-        
+
+
+
         // get the color that is specified for this position from the DataSet
         let drawingColor = dataSet.colors.first!
-        
+
         let intensity = dataSet.cubicIntensity
-        
+
         // the path for the cubic-spline
         //        let cubicPath = CGMutablePath()
-        
+
         let valueToPixelMatrix = trans.valueToPixelMatrix
-        
+
         let invaildiateValue = 0.000001
         var cubPathArray:[CGMutablePath] = [CGMutablePath]()
-        
+
         // 用于存储所有有效数据
         var vailedDataArray = [ChartDataEntry]()
         var values = [ChartDataEntry]()
-        
+
         var before:ChartDataEntry? = nil
         var chartsSegmentArray:[Array<ChartDataEntry>]=[Array<ChartDataEntry>]()
         for index in 0..<dataSet.entryCount{
-            
+
             let e1: ChartDataEntry = dataSet.entryForIndex(index)!
             if e1.y == invaildiateValue || e1 == dataSet.entryForIndex(dataSet.entryCount-1){
-                
+
                 if e1.y != invaildiateValue{
                     values.append(e1)
                     vailedDataArray.append(e1)
                     before = e1
                 }
-                
+
                 if nil != before{
                     chartsSegmentArray.append(values)
                     values = [ChartDataEntry]()
@@ -870,9 +905,9 @@ extension BMFLineChartRenderer{
         if vailedDataArray.count == dataSet.entryCount{
             chartsSegmentArray.append(vailedDataArray)
         }
-        
+
         let tempDataSet = dataSet;
-        
+
         let dataSet1: LineChartDataSet = LineChartDataSet.init(values: vailedDataArray, label: nil)
         dataSet1.drawVerticalHighlightIndicatorEnabled = tempDataSet.drawVerticalHighlightIndicatorEnabled
         dataSet1.lineWidth = tempDataSet.lineWidth
@@ -885,10 +920,10 @@ extension BMFLineChartRenderer{
         dataSet1.drawCirclesEnabled = tempDataSet.drawCirclesEnabled
         dataSet1.circleColors = tempDataSet.circleColors
         dataSet1.colors = tempDataSet.colors
-        
+
         _xBounds.set(chart: dataProvider, dataSet: dataSet1, animator: animator)
-        
-        
+
+
         if _xBounds.range >= 0
         {
             var prevDx: CGFloat = 0.0
@@ -899,11 +934,11 @@ extension BMFLineChartRenderer{
             // That's because we need 4 points for a cubic bezier (cubic=4), otherwise we get lines moving and doing weird stuff on the edges of the chart.
             // So in the starting `prev` and `cur`, go -2, -1
             // And in the `lastIndex`, add +1
-            
-            
-            
+
+
+
             for segmentIndex in 0..<chartsSegmentArray.count{
-                
+
                 let datatSegmentArray = chartsSegmentArray[segmentIndex]
                 let cubicPath = CGMutablePath()
                 let firstIndex = 1
@@ -921,17 +956,17 @@ extension BMFLineChartRenderer{
                     prevPrev = prev
                     prev = cur
                     cur = nextIndex == dataIndex ? next : datatSegmentArray[dataIndex]
-                    
+
                     nextIndex = dataIndex + 1 < datatSegmentArray.count ? dataIndex + 1 : dataIndex
                     next = datatSegmentArray[nextIndex]
-                    
+
                     if next == nil { break }
-                    
+
                     prevDx = CGFloat(cur.x - prevPrev.x) * intensity
                     prevDy = CGFloat(cur.y - prevPrev.y) * intensity
                     curDx = CGFloat(next.x - prev.x) * intensity
                     curDy = CGFloat(next.y - prev.y) * intensity
-                    
+
                     cubicPath.addCurve(
                         to: CGPoint(
                             x: CGFloat(cur.x),
@@ -943,54 +978,54 @@ extension BMFLineChartRenderer{
                             x: CGFloat(cur.x) - curDx,
                             y: (CGFloat(cur.y) - curDy) * CGFloat(phaseY)),
                         transform: valueToPixelMatrix)
-                    
+
                 }
-                
+
                 context.saveGState()
                 //                context.setLineWidth(dataSet1.lineWidth)
                 context.beginPath()
                 context.addPath(cubicPath)
                 context.setStrokeColor(drawingColor.cgColor)
                 context.strokePath()
-                
-                
+
+
             }
-            
-            
+
+
         }
-        
+
         //        context.saveGState()
         //
         if dataSet.isDrawFilledEnabled
         {
             // Copy this path because we make changes to it
-            
-            
+
+
             for segmentIndex in 0..<chartsSegmentArray.count{
                 let dataSegment = chartsSegmentArray[segmentIndex]
                 let tempDataSets: LineChartDataSet = LineChartDataSet.init(values: dataSegment, label: nil)
                 tempDataSets.fillAlpha = 1.0
                 tempDataSets.fill = Fill.fillWithColor(UIColor.init(red: 72.0/255.0, green: 192.0/255.0, blue: 218.0/255.0, alpha: 1.0))
                 tempDataSets.fillColor = UIColor.init(red: 242.0/255.0, green: 249.0/255.0, blue: 255.0/255.0, alpha: 1.0)
-                
+
                 _xBounds.set(chart: dataProvider, dataSet: tempDataSets, animator: animator)
-                
+
                 var cubip = CGMutablePath()
                 if cubPathArray.count > 0{
                     cubip = cubPathArray[segmentIndex]
-                    
+
                 }
                 else{
                     context.addPath(cubip)
-                    
+
                 }
-                
+
                 let fillPath = cubip
                 drawCubicFill(context: context, dataSet: tempDataSets, spline: fillPath, matrix: valueToPixelMatrix, bounds: _xBounds)
-                
-                
+
+
             }
-            
+
         }
         context.restoreGState()
     }
