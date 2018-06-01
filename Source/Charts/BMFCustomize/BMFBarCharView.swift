@@ -8,7 +8,7 @@
 import Foundation
 import CoreGraphics
 
-class BMFBarCharView: BMFBarChartViewBase,BarChartDataProvider {
+open class BMFBarCharView: BMFBarChartViewBase,BarChartDataProvider {
 
     /// if set to true, all values are drawn above their bars, instead of below their top
     private var _drawValueAboveBarEnabled = true
